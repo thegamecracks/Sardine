@@ -119,18 +119,17 @@ class Clock:
         """Schedules the given function to be executed."""
         if not inspect.iscoroutinefunction(func):
             raise TypeError(f'func must be a coroutine function, not {type(func).__name__}')
+        elif not self.running:
+            raise RuntimeError(f"Clock must be started before functions can be scheduled")
 
-        if self.running:
-            name = func.__name__
-            runner = self.runners.get(name)
-            if runner is None:
-                runner = self.runners[name] = AsyncRunner(self)
+        name = func.__name__
+        runner = self.runners.get(name)
+        if runner is None:
+            runner = self.runners[name] = AsyncRunner(self)
 
-            runner.push(func, *args, **kwargs)
-            if not runner.started():
-                runner.start()
-        else:
-            print(f"[red]Can't start {func.__name__} in absence of running clock.")
+        runner.push(func, *args, **kwargs)
+        if not runner.started():
+            runner.start()
 
     # ---------------------------------------------------------------------- #
     # Public methods
